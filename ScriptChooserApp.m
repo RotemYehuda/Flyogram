@@ -1,13 +1,17 @@
  classdef ScriptChooserApp < matlab.apps.AppBase
+    % This class defines an App for selecting and running different scripts
+    % based on user input from dropdown menus. The App allows users to 
+    % select actions, frequency, color palettes, and threshold ratios, 
+    % and then run the corresponding script based on their selections.
 
     % Properties that correspond to app components
     properties (Access = private)
-        UIFigure        matlab.ui.Figure
-        ActionDropDown  matlab.ui.control.DropDown
-        FrequencyDropDown matlab.ui.control.DropDown
-        PaletteDropDown matlab.ui.control.DropDown
-        RatioDropDown   matlab.ui.control.DropDown
-        RunButton       matlab.ui.control.Button
+       UIFigure        matlab.ui.Figure             % Main UI figure
+        ActionDropDown  matlab.ui.control.DropDown   % Dropdown for selecting action
+        FrequencyDropDown matlab.ui.control.DropDown % Dropdown for selecting frequency
+        PaletteDropDown matlab.ui.control.DropDown   % Dropdown for selecting color palette
+        RatioDropDown   matlab.ui.control.DropDown   % Dropdown for selecting threshold ratio
+        RunButton       matlab.ui.control.Button     % Button to run the selected script
     end
 
     % Callbacks that handle component events
@@ -15,10 +19,28 @@
 
         % Code that executes after component creation
         function startupFcn(app)
-            % Load available options into drop-down menus at startup
-            app.ActionDropDown.Items = {'Single fly', 'Movie', 'Condition', 'Representative Fly'};
-            app.FrequencyDropDown.Items = {'Frame', 'Second', 'Minute'};
-            app.PaletteDropDown.Items = {'Happy', 'Rainbow'};
+            % This function is called at the startup of the app. 
+            
+            % Add the menuOptions folder to the MATLAB path
+            optFolder = fullfile(fileparts(mfilename('fullpath')), 'menuOptions');
+            if exist(optFolder, 'dir')
+                addpath(optFolder);
+            else
+                error('The menuOptions directory does not exist.');
+            end
+
+            % Add the analysisScripts folder to the MATLAB path
+            analysisScriptsFolder = fullfile(fileparts(mfilename('fullpath')), 'analysisScripts');
+            if exist(analysisScriptsFolder, 'dir')
+                addpath(analysisScriptsFolder);
+            else
+                error('The analysisScripts directory does not exist.');
+            end
+            
+            % Populate dropdowns with enum values, converting them to strings
+            app.ActionDropDown.Items = cellstr(string(enumeration('ActionType')));   % Convert enum to cell array of strings
+            app.FrequencyDropDown.Items = cellstr(string(enumeration('FrequencyType'))); % Convert enum to cell array of strings
+            app.PaletteDropDown.Items = cellstr(string(enumeration('PaletteType')));  % Convert enum to cell array of strings
             app.RatioDropDown.Items = {'0.75', '0.65'};
         end
 
@@ -33,52 +55,30 @@
 
         % Button pushed function: RunButton
         function runButtonPushed(app, ~)
+            % This is the main function that executes when the "Run" button
+            % is pressed. It gathers the selected options from the dropdowns,
+            % calls the appropriate analysis function, and then resets the UI.
+
             % Disable UI components
             setUIComponentsEnabled(app, 'off');
 
-            selectedAction = app.ActionDropDown.Value;
-            selectedFrequency = app.FrequencyDropDown.Value;
-            selectedPalette = app.PaletteDropDown.Value;
+            % Convert selected dropdown values to enums
+            selectedAction = ActionType.(app.ActionDropDown.Value);  % Convert string to enum
+            selectedFrequency = FrequencyType.(app.FrequencyDropDown.Value);  % Convert string to enum
+            selectedPalette = PaletteType.(app.PaletteDropDown.Value);  % Convert string to enum
             selectedRatio = str2double(app.RatioDropDown.Value);
-            
-            % Execute the selected script
-            switch [selectedAction, ' Per ', selectedFrequency]
-                case 'Single fly Per Frame'
-                    singleFlyBehaviorAnalysis(selectedPalette,...
-                        'Frame', selectedRatio);
-                case 'Single fly Per Second'
-                    singleFlyBehaviorAnalysis(selectedPalette,...
-                        'Second', selectedRatio);
-                case 'Single fly Per Minute'
-                    singleFlyBehaviorAnalysis(selectedPalette,...
-                        'Minute', selectedRatio);
-                case 'Movie Per Frame'
-                    movieBehaviorAnalysis(selectedPalette,...
-                        'Frame', selectedRatio);
-                case 'Movie Per Second'
-                    movieBehaviorAnalysis(selectedPalette,...
-                        'Second', selectedRatio);
-                case 'Movie Per Minute'
-                    movieBehaviorAnalysis(selectedPalette,...
-                        'Minute', selectedRatio);
-                case 'Condition Per Frame'
-                    conditionBehaviorAnalysis(selectedPalette,...
-                        'Frame', selectedRatio);
-                case 'Condition Per Second'
-                    conditionBehaviorAnalysis(selectedPalette,...
-                        'Second', selectedRatio);
-                case 'Condition Per Minute'
-                    conditionBehaviorAnalysis(selectedPalette,...
-                        'Minute', selectedRatio);
-                case 'Representative Fly Per Frame'
-                    representativeFlyAnalysis(selectedPalette, 'Frame', selectedRatio);
-                case 'Representative Fly Per Second'
-                    representativeFlyAnalysis(selectedPalette, 'Second', selectedRatio);
-                case 'Representative Fly Per Minute'
-                    representativeFlyAnalysis(selectedPalette, 'Minute', selectedRatio);
-
+                    
+            % Execute the selected script using enums
+            switch selectedAction
+                case ActionType.SingleFly
+                    singleFlyBehaviorAnalysis(selectedPalette, selectedFrequency, selectedRatio);
+                case ActionType.Movie
+                    movieBehaviorAnalysis(selectedPalette, selectedFrequency, selectedRatio);
+                case ActionType.Condition
+                    conditionBehaviorAnalysis(selectedPalette, selectedFrequency, selectedRatio);
+                case ActionType.RepresentativeFly
+                    representativeFlyAnalysis(selectedPalette, selectedFrequency, selectedRatio);
                 otherwise
-                    % Handle invalid selection
                     disp('Invalid script selection');
             end
 
@@ -186,4 +186,3 @@
         end
     end
 end
-
