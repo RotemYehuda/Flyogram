@@ -1,13 +1,22 @@
-% The labels order set manually
+% TODO: fix the x-axis labels (starts at 0.5)
 function plotBehaviorMatrix(colorPalette, matrix, behaviorLabels, x_label, plot_title)
-    % Needed for the colors order
-    matrix(:, end) = 1;
+    % This function plots a matrix of behaviors with a color-coded visualization.
+    % The behavior labels are reordered based on a manually specified desired order.
+    % The matrix values are color-coded according to the behavior indices, and the
+    % color palette can be customized. 
+    %
+    % Inputs:
+    % - colorPalette: A string specifying the color palette ('Happy' or 'Rainbow').
+    % - matrix: The behavior matrix to be plotted (rows: behaviors, columns: frames/intervals).
+    % - behaviorLabels: A cell array of strings containing the labels for each behavior.
+    % - x_label: A string for labeling the x-axis.
+    % - plot_title: A string for the plot title.
 
+    % Define the desired order of behaviors
     desiredOrder = { 'Walk', 'Stop', 'Turn', 'Touch',...
         'Long Distance Approach', 'Short Distance Approach',...
-        'Long Lasting Interaction',...
-         'Social Clustering', 'Grooming', 'Song', 'Chain',...
-         'Chase', 'Jump'};
+        'Long Lasting Interaction', 'Social Clustering', ...
+        'Grooming', 'Song', 'Chain', 'Chase', 'Jump'};
 
     % Filter desiredOrder to include only behaviors present in behaviorLabels
     filteredDesiredOrder = desiredOrder(ismember(desiredOrder, behaviorLabels));
@@ -31,15 +40,13 @@ function plotBehaviorMatrix(colorPalette, matrix, behaviorLabels, x_label, plot_
         reorderedMatrix(i, reorderedMatrix(i, :) == 1) = i;
     end
 
-    % % Remove the last column of the reordered matrix
-    % % cheating for the minute ethogram
-    % reorderedMatrix(:, end-1:end) = [];
-
-    % Create a figure
+    % Create a figure for the behavior matrix plot
     figure;
     
+    % Plot the matrix as an image
     imagesc(reorderedMatrix);
     
+    % Define a custom color palette ('Happy' palette) for the plot
     happyColors = [
                 255/255 255/255 255/255;  % White
                 204/255 0/255   204/255;  % Medium Purple
@@ -57,28 +64,34 @@ function plotBehaviorMatrix(colorPalette, matrix, behaviorLabels, x_label, plot_
                 79/255  44/255  27/255;   % Dark Brown
                 ];
 
-    % Ensure there are enough colors
+    % Ensure there are enough colors to cover all behaviors
     if strcmpi(colorPalette, 'Happy')
+        % If there are more behaviors than colors, repeat the colors (skipping white)
         if size(reorderedMatrix, 1) > size(happyColors, 1)
             happyColors = [happyColors; happyColors(2:end, :)]; % Repeat colors if needed
         end
-        % Set the colormap
+        % Set the colormap using the custom Happy palette
         colormap(happyColors(1:length(reorderedBehaviorLabels) + 1, :));
     elseif strcmpi(colorPalette, 'Rainbow')
+        % Use the 'jet' colormap for the 'Rainbow' option
         cmap = [1 1 1; jet(size(reorderedMatrix, 1))];
         colormap(cmap);
     else
-       cmap = [1 1 1; jet(size(reorderedMatrix, 1))];
-       colormap(cmap);
+        % Default to 'jet' colormap if no valid palette is provided
+        cmap = [1 1 1; jet(size(reorderedMatrix, 1))];
+        colormap(cmap);
     end
 
-    % Set common labels
+    % Set the title of the plot
     title(plot_title);
+    
+    % Set the x-axis label
     xlabel(x_label);
 
-    % Set y-axis ticks to show the behaviors
+    % Set the y-axis ticks to show the reordered behavior labels
     yticks(1:size(reorderedMatrix, 1));
     yticklabels(reorderedBehaviorLabels);
 
+    % Display a success message
     disp("Successfully plotted the behavior matrix.");
 end
