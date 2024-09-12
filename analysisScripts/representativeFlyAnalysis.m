@@ -1,5 +1,6 @@
-% TODO: Change the name of the file so that it contains the time units, 
-% present to the user and save the number of the representative fly and the film it came from.
+% TODO: right now the cell contains all the flies of the condition - we to separate the different films, 
+% so that we can return to the user the name of the film and the number of the selected fly. 
+% In addition to this, save the values ​​of the loss function, and the final matrix chosen as representative.
 function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
     % This function performs behavior analysis for each experimental condition
     % and identifies the most representative fly based on behavior data.
@@ -112,7 +113,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
         
         % Save the data table as a CSV file
         dataTable = cell2table(data, 'VariableNames', columnNames);
-        saveTableToCSV(conditionDirs{i}, sprintf('%s_thresholds', uniqueConditions{i}), dataTable);
+        saveTableToCSV(conditionDirs{i}, sprintf('%s_thresholds_%s', uniqueConditions{i}, timeInterval), dataTable);
 
         % Apply thresholds to the normalized matrices for each movie
         thresholdedMoviesMats = cell(length(uniqueMovies), 1);
@@ -164,7 +165,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
         set(gcf, 'Position', [0, 0, 6, 5]);
 
         % Save the plot as a PNG file
-        saveas(gcf, fullfile(conditionDirs{i}, ['RepresentiveFly_' conditionName '.png']), 'png');        
+        saveas(gcf, fullfile(conditionDirs{i}, sprintf('RepresentiveFly_%s_%s.png', conditionName, timeInterval)), 'png');   
     end
 end
 
