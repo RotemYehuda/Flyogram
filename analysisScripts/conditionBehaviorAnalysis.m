@@ -25,15 +25,15 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
     allDataInTbl = processExperimentData(filesNames);
     
     % Group data by condition
-    groupedData = findgroups(allDataInTbl.condition);  % Group the data by the "condition" column
+    groupedData = findgroups(allDataInTbl.GroupName);  % Group the data by the "condition" column
         
     % Extract unique conditions from the data, keeping their original order
-    uniqueConditions = unique(allDataInTbl.condition, 'stable');
+    uniqueGroups = unique(allDataInTbl.GroupName, 'stable');
     
     % Initialize matrices to store thresholds, number of movies per condition and normalized behavior data per condition
-    conditionsThresholdMatrix = zeros(numBehaviors, length(uniqueConditions));
-    numMoviesForEachCondition = zeros(length(uniqueConditions), 1);
-    normalizedConditionsMats = cell(length(uniqueConditions), 1);
+    conditionsThresholdMatrix = zeros(numBehaviors, length(uniqueGroups));
+    numMoviesForEachCondition = zeros(length(uniqueGroups), 1);
+    normalizedConditionsMats = cell(length(uniqueGroups), 1);
 
     % Variable to track the minimum number of frames across all conditions
     minFrames = inf;
@@ -42,21 +42,21 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
     conditionDirs = createConditionDirectories(allDataInTbl, 'ConditionEthogram');
     
     % Get the total number of unique movies in the selected dataset
-    totalMovies = length(unique(allDataInTbl.movie_number, 'stable'));
+    totalMovies = length(unique(allDataInTbl.MovieNumber, 'stable'));
     
     % Loop over each unique condition and process its behavior data
-    for i = 1:length(uniqueConditions)
+    for i = 1:length(uniqueGroups)
         % Filter the data for the current condition
         conditionData = allDataInTbl(groupedData == i, :);
         
-        % Group the data by the "movie_number" column
-        groupedMovieData = findgroups(conditionData.movie_number);
+        % Group the data by the "MovieNumber" column
+        groupedMovieData = findgroups(conditionData.MovieNumber);
         
         % Extract unique movies from the condition's data
-        uniqueMovies = unique(conditionData.movie_number, 'stable');
+        uniqueMovies = unique(conditionData.MovieNumber, 'stable');
 
         % Count the number of movies associated with the current condition
-        numMoviesForEachCondition(i) = length(unique(conditionData.movie_number));
+        numMoviesForEachCondition(i) = length(unique(conditionData.MovieNumber));
 
         normalizedMoviesMats = cell(length(uniqueMovies), 1);  % Initialize matrix to store normalized movie data
         moviesThresholdMatrix = zeros(numBehaviors, length(uniqueMovies));  % Matrix to store thresholds for each movie
@@ -73,7 +73,7 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
             movieData = conditionData(groupedMovieData == j, :);
 
             % Get movie name for saving files
-            movieName = getMovieName(movieData.name_of_the_file{1});
+            movieName = getMovieName(movieData.FolderPath{1});
 
             % Extract behavior matrices for the current movie
             [combinedScoresMatrices, numFlies, movieMinFrames] = extractFlyBehaviorMatrices(movieData, numBehaviors, totalMovies);
@@ -101,7 +101,7 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
         normalizedConditionsMats{i} = normalizedMoviesMats;        
         
         % Prepare column names for the threshold data
-        movieNames = cellfun(@(x) getMovieName(x), conditionData.name_of_the_file, 'UniformOutput', false);
+        movieNames = cellfun(@(x) getMovieName(x), conditionData.FolderPath, 'UniformOutput', false);
         uniqueMovieNames = unique(movieNames, 'stable');
         columnNames = [{'Behavior'}, uniqueMovieNames', {'avgThreshold'}];
 
@@ -111,7 +111,7 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
         % Convert the data into a table format and save it as a CSV file
         dataTable = cell2table(data, 'VariableNames', columnNames);
         for j = 1:length(conditionDirs)
-            saveTableToCSV(conditionDirs{j}, sprintf('%s_thresholds', uniqueConditions{i}), dataTable);
+            saveTableToCSV(conditionDirs{j}, sprintf('%s_thresholds', uniqueGroups{i}), dataTable);
         end
     end
 
@@ -122,8 +122,8 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
     thresholds = chooseThresholdsGUI(behaviorLabels, defaultThresholds);
     
     % Prepare column names for the default and final thresholds tables
-    defaultColumnNames = [{'Behavior'}, uniqueConditions', {'defaultThreshold'}];
-    finalColumnNames = [{'Behavior'}, uniqueConditions', {'finalThreshold'}];
+    defaultColumnNames = [{'Behavior'}, uniqueGroups', {'defaultThreshold'}];
+    finalColumnNames = [{'Behavior'}, uniqueGroups', {'finalThreshold'}];
 
     % Combine behavior labels, default thresholds, and final thresholds into data tables
     defaultData = [behaviorLabels, num2cell(conditionsThresholdMatrix), num2cell(defaultThresholds)];
@@ -145,8 +145,8 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
     finalMatrices = conditionThresholds(thresholdedMatrices, minFrames, behaviorLabels, numBehaviors, timeInterval);
 
     % Loop over each condition and plot the common behavior matrix
-    for i = 1:length(uniqueConditions)
-        tempConditionName = uniqueConditions{i};  % Get the condition name
+    for i = 1:length(uniqueGroups)
+        tempConditionName = uniqueGroups{i};  % Get the condition name
         conditionName = strrep(tempConditionName, '_', ' ');  % Format the condition name for display
         behaviorsMat = finalMatrices{i};  % Get the final behavior matrix for the condition
         
