@@ -12,7 +12,7 @@ function paths = createConditionDirectories(alldataintbl, folderName)
     % - paths: A cell array of the newly created folder paths for each condition.
     
     % Get the unique conditions from the 'condition' column of the table
-    conditions = unique(alldataintbl.condition);
+    conditions = unique(alldataintbl.GroupName);
     
     % Initialize a cell array to store the paths of the created directories
     paths = cell(length(conditions), 1);
@@ -23,10 +23,10 @@ function paths = createConditionDirectories(alldataintbl, folderName)
         condition = conditions{i};
         
         % Find the rows in the table that match the current condition
-        conditionRows = alldataintbl(strcmp(alldataintbl.condition, condition), :);
+        conditionRows = alldataintbl(strcmp(alldataintbl.GroupName, condition), :);
         
         % Extract the file path from the first matching row for the condition
-        filePath = conditionRows.name_of_the_file{1};
+        filePath = conditionRows.FolderPath{1};
         
         % Extract the parent directory path from the file path
         [parentDir, ~, ~] = fileparts(filePath);
