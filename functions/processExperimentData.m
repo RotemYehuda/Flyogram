@@ -1,114 +1,100 @@
 function allDatainTbl = processExperimentData(allBehaviors)
-    % This function processes experiment data by generating tables based on selected
-    % experiment group folders and extracting behavior data from those folders.
-    % It constructs a table with fly behavior data, including additional metadata like
-    % condition, sex, and movie number, and then sorts the table based on condition names.
+    % This function processes experiment data by allowing the user to select
+    % multiple folders for each experimental group, assign a name to each group,
+    % and then extract and compile behavior data from those folders.
     %
     % Inputs:
     % - allBehaviors: A cell array containing the file names of behavior data.
     %
     % Output:
-    % - allDatainTbl: A table containing the processed data from all experiments, 
-    %   including behavior scores and associated metadata (condition, sex, etc.).
+    % - allDatainTbl: A table containing the processed data from all experiments,
+    %   including behavior scores and associated metadata.
 
-    % Prompt the user to select experiment group folders
-    expGroups = uipickfiles('Prompt', 'Select experiment groups folders');
-    [suggestedPath, ~, ~] = fileparts(expGroups{1});
-    savePath = suggestedPath;  % Suggested path for saving results
-    numOfGroups = length(expGroups);  % Number of experiment groups
+    % Initialize variables
+    allGroupData = {};  % Cell array to store data for all groups
+    groupNames = {};    % Cell array to store group names
 
-    % Initialize variables for experiment group data
-    groupNameDir = expGroups';  % Store the selected folder paths
-    NumberofMovie = {1:numOfGroups}';  % Create a list of movie numbers
-    condition = {};  % Initialize a cell array for conditions
-
-    % Loop over each group to extract condition and sex information
-    for j = 1:numOfGroups
-        % Extract the file path for the current group
-        fileNamePath = groupNameDir(j);
-        
-        % Extract the condition name from the folder path
-        findStr = strfind(fileNamePath, "\");
-        findStr = cell2mat(findStr);
-        vecLen = length(findStr);
-        char_fileNamePath = char(fileNamePath);
-        condition{j} = char_fileNamePath(findStr(vecLen - 1) + 1:findStr(vecLen) - 1);
-        
-        % Determine the sex (Male/Female) based on folder name
-        if strfind(char_fileNamePath, "Male")
-            sex{j} = "Males";
-        elseif strfind(char_fileNamePath, "Female")
-            sex{j} = "Females";
-        else
-            sex{j} = [];
+    % Loop to allow user to select folders for each group
+    while true
+        % Prompt user to select folders for the current group
+        groupFolders = uipickfiles('Prompt', 'Select folders for the current group');
+        if isequal(groupFolders, 0) || isempty(groupFolders)
+            break;  % Exit loop if user cancels or doesn't select any folders
         end
 
-        NumberofMovie{j} = j;  % Assign the movie number
+        % Prompt user to enter a name for the current group
+        groupName = inputdlg('Enter a name for this group:', 'Group Name', [1 50]);
+        if isempty(groupName)
+            break;  % Exit loop if user cancels or doesn't enter a name
+        end
+        groupName = groupName{1};
+
+        % Store the selected folders and group name
+        allGroupData{end+1} = groupFolders;
+        groupNames{end+1} = groupName;
+
+        % Ask if the user wants to add another group
+        choice = questdlg('Do you want to add another group?', 'Add Another Group', 'Yes', 'No', 'No');
+        if strcmp(choice, 'No')
+            break;  % Exit loop if user chooses not to add another group
+        end
     end
 
-    % Prepare the data for the experiment tables
-    condition = condition';
-    sex = sex';
-    NumberofMovie = NumberofMovie';
-
-    % Create a table with experiment group information
-    experimentTables = table(groupNameDir, NumberofMovie, condition, sex);
-
     % Initialize a cell array to store behavior data
-    counter = 0;
-    cellBehavior = cell(0, 5 + length(allBehaviors));
+    cellBehavior = cell(0, 4 + numel(allBehaviors) * 1);  % Preallocate size for all behavior scores in one row.
 
-    % Loop through each movie group to process behavior data
-    for numberMovie = 1:numOfGroups
-        name_of_the_file = char(experimentTables{numberMovie, 1});
-        name_of_the_condition = experimentTables{numberMovie, 3};
-        number_of_movie = experimentTables{numberMovie, 2};
+    % Process each group
+    movieCounter = 0;
+    for groupIdx = 1:length(allGroupData)
+        groupFolders = allGroupData{groupIdx};
+        groupName = groupNames{groupIdx};
 
-        % Change the directory to the current experiment group folder
-        cd(name_of_the_file)
+        % Process each folder within the current group
+        for folderIdx = 1:length(groupFolders)
+            folderPath = groupFolders{folderIdx};
+            movieCounter = movieCounter + 1;  % Increment movie number
+            cd(folderPath);
 
-        % Loop through each behavior file to load behavior data
-        for jj = 1:length(allBehaviors)
-            load(cell2mat(allBehaviors(jj)));  % Load the behavior data
-            ii = length(allScores.postprocessed);  % Number of flies in the data
+            % Initialize a container for behavior scores for all flies
+            flyData = {};
 
-            % Loop through each fly to extract behavior scores
-            for numFly = 1:ii
-                behaviorPerFileScore = allScores.postprocessed{1, numFly};
-                % Store the metadata and behavior scores in cellBehavior
-                cellBehavior{numFly + counter, 1} = numFly;  % Fly number
-                cellBehavior{numFly + counter, 2} = name_of_the_file;  % File path
-                cellBehavior{numFly + counter, 3} = numberMovie;  % Movie number
-                cellBehavior{numFly + counter, 4} = char(experimentTables.sex{numberMovie});  % Sex
-                cellBehavior{numFly + counter, 5} = name_of_the_condition;  % Condition
-                cellBehavior{numFly + counter, jj + 5} = behaviorPerFileScore;  % Behavior score
+            % Loop through each behavior file and collect data per fly
+            for behaviorIdx = 1:length(allBehaviors)
+                behaviorFile = allBehaviors{behaviorIdx};
+                if exist(behaviorFile, 'file')
+                    load(behaviorFile, 'allScores');
+                    numFlies = length(allScores.postprocessed);
+
+                    % Expand data matrix as needed
+                    for flyIdx = 1:numFlies
+                        % If first time encountering this fly, initialize its row
+                        if behaviorIdx == 1
+                            flyData{flyIdx, 1} = movieCounter; % Movie number
+                            flyData{flyIdx, 2} = flyIdx;       % Fly number
+                            flyData{flyIdx, 3} = folderPath;   % Folder path
+                            flyData{flyIdx, 4} = groupName;    % Group name
+                        end
+                        
+                        % Add this behavior score to this fly's row
+                        flyData{flyIdx, 4 + behaviorIdx} = allScores.postprocessed{flyIdx};
+                    end
+                else
+                    warning('Behavior file %s not found in folder %s.', behaviorFile, folderPath);
+                end
             end
-        end
 
-        % Update the counter to keep track of the total number of flies processed
-        counter = counter + ii;
+            % Append all flies' data for this movie to the final cell array
+            cellBehavior = [cellBehavior; flyData];
+        end
     end
 
     % Create a table from the cell array containing behavior data
-    Title_old = ["fly", "name_of_the_file", "movie_number", "sex", "condition"];
-    TitleNames = [Title_old, allBehaviors];  % Combine metadata titles with behavior titles
-    TitleNames = regexprep(TitleNames, '.mat', '');  % Remove ".mat" from behavior names
-    allDatainTbl = cell2table(cellBehavior, 'VariableNames', TitleNames);  % Create table
+    variableNames = [{'MovieNumber', 'FlyNumber', 'FolderPath', 'GroupName'}, allBehaviors];
+    allDatainTbl = cell2table(cellBehavior, 'VariableNames', variableNames);
 
-    % Check if condition names contain digits for sorting
-    conditionNumeric = regexp(allDatainTbl.condition, '\d+', 'match');
-    conditionHasDigits = ~cellfun('isempty', conditionNumeric);
-
-    if any(conditionHasDigits)
-        % If conditions contain numeric parts, sort them numerically
-        conditionNumeric = cellfun(@(x) str2double(x{1}), conditionNumeric(conditionHasDigits));
-        sortedConditionIdx = find(conditionHasDigits);
-        [~, sortIdx] = sort(conditionNumeric);  % Sort conditions based on numeric part
-        sortedIdx = sortedConditionIdx(sortIdx);
-        % Combine sorted numeric conditions with non-numeric ones
-        allDatainTbl = allDatainTbl([sortedIdx; find(~conditionHasDigits)], :);
-    end
+    % Sort the table based on MovieNumber and FlyNumber
+    allDatainTbl = sortrows(allDatainTbl, {'MovieNumber', 'FlyNumber'});
 
     % Display a success message
-    disp("Successfully processed the experiment data.");
+    disp('Successfully processed the experiment data.');
 end
