@@ -28,8 +28,8 @@ function [combinedScoresMatrices, numFlies, minFrames] = extractFlyBehaviorMatri
     if totalMovies > 2
         % Loop through each fly to create and store the combined scores matrices
         for flyNum = 1:numFlies
-            % Extract the behavior data for the current fly (from column 6 onward)
-            behaviorData = movieData{flyNum, 6:end};
+            % Extract the behavior data for the current fly (from column 5 onward)
+            behaviorData = movieData{flyNum, 5:end};
     
             % Determine the number of frames from the first behavior vector
             numFrames = numel(behaviorData{1});
@@ -59,7 +59,7 @@ function [combinedScoresMatrices, numFlies, minFrames] = extractFlyBehaviorMatri
             % Iterate through each behavior to extract its vector
             for behaviorIdx = 1:numBehaviors
                 % Extract the behavior vector for the current fly and behavior index
-                behaviorData{behaviorIdx} = movieData{flyNum, 5 + behaviorIdx};
+                 behaviorData{behaviorIdx} = movieData{flyNum, 4 + behaviorIdx};
             end
     
             % Determine the number of frames from the first behavior vector
