@@ -1,4 +1,4 @@
-% TODO: right now the cell contains all the flies of the condition - we to separate the different films, 
+% TODO: right now the cell contains all the flies of the condition - we need to separate the different films, 
 % so that we can return to the user the name of the film and the number of the selected fly. 
 % In addition to this, save the values ​​of the loss function, and the final matrix chosen as representative.
 function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
@@ -24,28 +24,28 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
     % Process experimental data and convert it into a table format
     allDataInTbl = processExperimentData(filesNames);
     
-    % Group the data by the "condition" column
-    groupedData = findgroups(allDataInTbl.condition);
+    % Group data by condition
+    groupedData = findgroups(allDataInTbl.GroupName);  % Group the data by the "condition" column
         
-    % Get unique experimental conditions in the dataset
-    uniqueConditions = unique(allDataInTbl.condition, 'stable');
+    % Extract unique conditions from the data, keeping their original order
+    uniqueGroups = unique(allDataInTbl.GroupName, 'stable');
 
     % Create directories to store ethogram data for each condition
     conditionDirs = createConditionDirectories(allDataInTbl, 'representativeFlyEthogram');
     
     % Get the total number of unique movies in the dataset
-    totalMovies = length(unique(allDataInTbl.movie_number, 'stable'));
-    
+    totalMovies = length(unique(allDataInTbl.MovieNumber, 'stable'));    
+
     % Loop over each unique experimental condition
-    for i = 1:length(uniqueConditions)
+    for i = 1:length(uniqueGroups)
         % Filter data for the current condition
         conditionData = allDataInTbl(groupedData == i, :);
         
-        % Group the data by "movie_number" to handle multiple movies in the same condition
-        groupedMovieData = findgroups(conditionData.movie_number);
+        % Group the data by "MovieNumber" to handle multiple movies in the same condition
+        groupedMovieData = findgroups(conditionData.MovieNumber);
         
         % Get unique movie identifiers for the current condition
-        uniqueMovies = unique(conditionData.movie_number, 'stable');
+        uniqueMovies = unique(conditionData.MovieNumber, 'stable');
 
         % Initialize matrices to store thresholds and behavior data
         moviesThresholdMatrix = zeros(numBehaviors, length(uniqueMovies));
@@ -72,7 +72,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
             movieData = conditionData(groupedMovieData == j, :);
 
             % Get the name of the current movie for saving files
-            movieName = getMovieName(movieData.name_of_the_file{1});
+            movieName = getMovieName(movieData.FolderPath{1});
 
             % Extract behavior matrices for all flies in the movie and get the minimum number of frames
             [combinedScoresMatrices, numFlies, movieMinFrames] = ...
@@ -104,7 +104,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
         conditionThresholds = mean(moviesThresholdMatrix, 2);
 
         % Prepare column names for saving thresholds
-        movieNames = cellfun(@(x) getMovieName(x), conditionData.name_of_the_file, 'UniformOutput', false);
+        movieNames = cellfun(@(x) getMovieName(x), conditionData.FolderPath, 'UniformOutput', false);
         uniqueMovieNames = unique(movieNames, 'stable');
         columnNames = [{'Behavior'}, uniqueMovieNames', {'avgThreshold'}];
 
@@ -113,7 +113,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
         
         % Save the data table as a CSV file
         dataTable = cell2table(data, 'VariableNames', columnNames);
-        saveTableToCSV(conditionDirs{i}, sprintf('%s_thresholds_%s', uniqueConditions{i}, timeInterval), dataTable);
+        saveTableToCSV(conditionDirs{i}, sprintf('%s_thresholds_%s', uniqueGroups{i}, timeInterval), dataTable);
 
         % Apply thresholds to the normalized matrices for each movie
         thresholdedMoviesMats = cell(length(uniqueMovies), 1);
@@ -147,7 +147,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
         representativeFlyMatrix = computeRepresentativeFly(conditionMatrix, singleFliesMatrices);
 
         % Format the condition name for display
-        tempConditionName = uniqueConditions{i};
+        tempConditionName = uniqueGroups{i};
         conditionName = strrep(tempConditionName, '_', ' ');
 
         % Plot the representative fly behavior matrix based on the selected time interval
