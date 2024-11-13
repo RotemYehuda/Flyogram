@@ -1,5 +1,5 @@
-function [filesNames, numBehaviors, behaviorLabels, condition, numFlies] = extractFilesAndLabels()
-    % This function extracts file names, behavior labels, condition, and the number of flies
+function [filesNames, numBehaviors, behaviorLabels, numFlies] = extractFilesAndLabels()
+    % This function extracts file names, behavior labels,  and the number of flies
     % from the selected experiment scores files. It processes the file names to create behavior
     % labels and capitalizes them for uniformity.
     %
@@ -7,7 +7,6 @@ function [filesNames, numBehaviors, behaviorLabels, condition, numFlies] = extra
     % - filesNames: A cell array containing the names of the behavior score files.
     % - numBehaviors: The number of behaviors (derived from the number of files).
     % - behaviorLabels: A cell array of capitalized behavior labels extracted from the file names.
-    % - condition: The condition name extracted from the file path.
     % - numFlies: The number of flies determined from one of the score files.
 
     % Prompt the user to select an example scores file using a file picker dialog
@@ -16,10 +15,6 @@ function [filesNames, numBehaviors, behaviorLabels, condition, numFlies] = extra
     % Extract the directory (path) from the selected file for saving further processing
     [suggestedPath, ~, ~] = fileparts(expGroups{1});
     savePath = suggestedPath;
-
-    % Extract the condition name from the file path (second to last folder in the path)
-    components = strsplit(savePath, '\');
-    condition = components{end - 1};  % Assuming the condition name is located here
 
     % Change the current directory to the path where the score files are stored
     cd(savePath);
