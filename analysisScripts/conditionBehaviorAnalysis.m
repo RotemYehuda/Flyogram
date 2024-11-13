@@ -19,7 +19,7 @@ function conditionBehaviorAnalysis(colorPalette, timeInterval, ratio)
    
     % Extract filenames, behaviors, and fly details using a custom function
     % The function returns file names, number of behaviors and the behavior labels
-    [filesNames, numBehaviors, behaviorLabels, ~, ~] = extractFilesAndLabels();
+    [filesNames, numBehaviors, behaviorLabels, ~] = extractFilesAndLabels();
       
     % Process all the experiment data into a unified table structure
     allDataInTbl = processExperimentData(filesNames);
