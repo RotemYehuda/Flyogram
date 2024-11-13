@@ -18,7 +18,15 @@ function movieBehaviorAnalysis(colorPalette, timeInterval, ratio)
     
     % Extract filenames, behaviors, and fly details using a custom function
     % The function returns file names, number of behaviors, behavior labels, condition, and the number of flies
-    [filesNames, numBehaviors, behaviorLabels, condition, numFlies] = extractFilesAndLabels();
+    [filesNames, numBehaviors, behaviorLabels, numFlies] = extractFilesAndLabels();
+
+    % Prompt user to enter a name for the current group
+    groupName = inputdlg('Enter a name for this group:', 'Group Name', [1 50]);
+    if isempty(groupName)
+        disp('No group name entered. Exiting function.');
+        return;  % Exit function if user cancels or doesn't enter a name
+    end
+    groupName = groupName{1};
     
     % Create output directory for ethograms
     outputDir = fullfile(pwd, 'MovieEthogram');
@@ -73,7 +81,7 @@ function movieBehaviorAnalysis(colorPalette, timeInterval, ratio)
     writematrix(binaryBehaviorMat, binaryBehaviorMatFileName);
     
     % Replace underscores in the condition name for display purposes
-    conditionName = strrep(condition, '_', ' ');
+    conditionName = strrep(groupName, '_', ' ');
 
     % Plot the binary behavior matrix and set the appropriate labels based on the time interval
     switch timeInterval
@@ -93,7 +101,7 @@ function movieBehaviorAnalysis(colorPalette, timeInterval, ratio)
     set(gcf, 'Position', [0, 0, 6, 5]);
     
     % Save the plot as a PNG file in the run directory
-    saveas(gcf, fullfile(runDir, sprintf('MovieBehavior_%s_%s.png', condition, timeInterval)), 'png');
+    saveas(gcf, fullfile(runDir, sprintf('MovieBehavior_%s_%s.png', groupName, timeInterval)), 'png');
 end
 
 % Function to add the 'functions' folder to the MATLAB path
