@@ -1,4 +1,4 @@
-% TODO: right now the cell contains all the flies of the condition - we need to separate the different films, 
+% TODO: right now the cell contains all the flies of the condition - we to separate the different films, 
 % so that we can return to the user the name of the film and the number of the selected fly. 
 % In addition to this, save the values ​​of the loss function, and the final matrix chosen as representative.
 function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
@@ -19,7 +19,7 @@ function representativeFlyAnalysis(colorPalette, timeInterval, ratio)
     addFunctionsPath();
    
     % Extract file names, behavior labels, and other details from data files
-    [filesNames, numBehaviors, behaviorLabels, ~, ~] = extractFilesAndLabels();
+    [filesNames, numBehaviors, behaviorLabels, ~] = extractFilesAndLabels();
       
     % Process experimental data and convert it into a table format
     allDataInTbl = processExperimentData(filesNames);
