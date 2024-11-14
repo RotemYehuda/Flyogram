@@ -18,7 +18,15 @@ function singleFlyBehaviorAnalysis(colorPalette, timeInterval, ratio)
     addFunctionsPath();
     
     % Extract filenames, behaviors, and fly details
-    [filesNames, numBehaviors, behaviorLabels, condition, numFlies] = extractFilesAndLabels();
+    [filesNames, numBehaviors, behaviorLabels, numFlies] = extractFilesAndLabels();
+
+    % Prompt user to enter a name for the current group
+    groupName = inputdlg('Enter a name for this group:', 'Group Name', [1 50]);
+    if isempty(groupName)
+        disp('No group name entered. Exiting function.');
+        return;  % Exit function if user cancels or doesn't enter a name
+    end
+    groupName = groupName{1};
 
     % Create the output directory for saving ethograms if it doesn't exist
     outputDir = fullfile(pwd, 'SingleFlyEthogram');  % Define output directory
@@ -35,13 +43,13 @@ function singleFlyBehaviorAnalysis(colorPalette, timeInterval, ratio)
             % Create a new directory for this fly and time interval
             runDir = createRunDirectory(outputDir, flyIdx, timeInterval);
             % Process and analyze data for this fly
-            processSingleFly(flyIdx, filesNames, numBehaviors, behaviorLabels, condition, ...
+            processSingleFly(flyIdx, filesNames, numBehaviors, behaviorLabels, groupName, ...
                 timeInterval, ratio, runDir, colorPalette);
         end
     else
         % Process only the selected fly
         runDir = createRunDirectory(outputDir, flyNum, timeInterval);
-        processSingleFly(flyNum, filesNames, numBehaviors, behaviorLabels, condition, ...
+        processSingleFly(flyNum, filesNames, numBehaviors, behaviorLabels, groupName, ...
             timeInterval, ratio, runDir, colorPalette);
     end
 end
@@ -80,7 +88,7 @@ function addFunctionsPath()
 end
 
 % Function to process and plot behavior for a single fly
-function processSingleFly(flyNum, filesNames, numBehaviors, behaviorLabels, condition, ...
+function processSingleFly(flyNum, filesNames, numBehaviors, behaviorLabels, groupName, ...
     timeInterval, ratio, runDir, colorPalette)
     
     % Create the combined scores matrix for the specified fly
@@ -107,7 +115,7 @@ function processSingleFly(flyNum, filesNames, numBehaviors, behaviorLabels, cond
     writematrix(binaryBehaviorMat, binaryBehaviorMatFileName);
 
     % Replace underscores in condition name for display purposes
-    conditionName = strrep(condition, '_', ' ');
+    conditionName = strrep(groupName, '_', ' ');
 
     % Set the title and time label for plotting based on the selected time interval
     switch timeInterval

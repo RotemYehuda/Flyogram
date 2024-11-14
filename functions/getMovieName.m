@@ -9,8 +9,11 @@ function movieName = getMovieName(filePath)
     % - movieName: The name of the file (movie) without the directory path and file extension.
 
     % Use fileparts to split the file path into directory, name, and extension.
-    [~, name, ~] = fileparts(filePath);
+    %[~, name, ~] = fileparts(filePath);
     
     % Assign the name (without extension) to movieName.
-    movieName = name;
+    %movieName = name;
+
+    timestamp = regexp(filePath, '\d{8}T\d{6}$', 'match', 'once');
+    movieName = timestamp;
 end
